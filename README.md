@@ -1,4 +1,4 @@
-# Bomberman
+# Bomber Man Game
 Bomberman game based on reinforcement learning
 <br>
 ## INTRODUCTION<br>
