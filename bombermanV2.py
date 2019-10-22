@@ -27,15 +27,7 @@ M表示怪物，简单版本设置怪物固定为3个，怪物的【行进路线
 炸弹人一次只能投下一枚强度为2的炸弹(四个方向各2格)来杀死怪物，当炸弹人烧伤自己或被怪物砸碎时，游戏结束。里美你可以假设游戏没有时间限制
 
 
-version: 1.0 怪物没有强化学习的能力
-只有一个怪物M
-迷宫是 6*6 的
-X X X X X X
-X M       X
-X     X X X
-X         X
-X   X   B X
-X X X X X X
+version: 2.0
 
 @author: Theresa
 """
@@ -44,8 +36,8 @@ import pandas as pd
 import time
 import os
 
-WIDE = 6
-HEIGHT = 6
+WIDE = 12
+HEIGHT = 12
 N_STATES = WIDE * HEIGHT  # 除去墙其实也是一个 5*5
 ACTIONS_M = ['left', 'right', 'up', 'down']  # monster's available actions
 ACTIONS_B = ['left', 'right', 'up', 'down', 'setBoom']  # bomberman's available actions
@@ -57,13 +49,19 @@ FRESH_TIME = 0.3  # fresh time for one move
 BOOMTIMES = 1  # 炸弹可以爆炸的次数
 BOOM_WAIT = 3
 
-maze = np.asarray([["X", "X", "X", "X", "X", "X"],
-                   ["X", "M", " ", " ", " ", "X"],
-                   ["X", " ", " ", " ", " ", "X"],
-                   ["X", " ", "B", " ", " ", "X"],
-                   ["X", " ", " ", " ", " ", "X"],
-                   ["X", "X", "X", "X", "X", "X"]])  # 迷宫的样子
-index = np.arange(36).reshape(6, 6)
+maze = np.asarray([["X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],
+                   ["X", "B", " ", " ", " ", " ", " ", "X", " ", " ", " ", "X"],
+                   ["X", " ", " ", " ", " ", " ", " ", "X", " ", " ", " ", "X"],
+                   ["X", " ", " ", " ", "X", "X", "X", " ", " ", " ", " ", "X"],
+                   ["X", "X", " ", " ", " ", " ", "X", " ", " ", "X", "X", "X"],
+                   ["X", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "X"],
+                   ["X", " ", " ", " ", "X", "X", " ", " ", " ", " ", " ", "X"],
+                   ["X", " ", " ", " ", " ", " ", " ", " ", "X", " ", " ", "X"],
+                   ["X", " ", " ", " ", " ", " ", " ", " ", "X", " ", " ", "X"],
+                   ["X", "X", "X", "X", "X", "X", "X", " ", "X", " ", " ", "X"],
+                   ["X", " ", " ", " ", " ", " ", " ", " ", " ", " ", "M", "X"],
+                   ["X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],])  # 迷宫的样子
+index = np.arange(WIDE * HEIGHT).reshape(WIDE, HEIGHT)
 record_S_M = []
 boom_state = []
 
