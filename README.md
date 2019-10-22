@@ -14,7 +14,7 @@ Version1: one maze and one bomber man without monster, the aim of this version i
 Version2: add the monster, the monster can eat the bomber man, and the bomber man can’t set bomb yet
 Version3: the bomber man has ability to set the boom and after a period of time the boom explode, it may kill the monster or itself.<br>
 Version4: like the real game more monsters, and further modification.<br>
-Versions of the program can be seen at: bombermanV2
+Versions of the program can be seen at: **bombermanV3, LATEST**
 <br>
 ### B.	Main logic<br>
 The main functions and what they do:<br>
