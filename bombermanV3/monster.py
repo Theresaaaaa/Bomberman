@@ -1,17 +1,21 @@
+import numpy as np
 class monster:
     q_predict_M = 0
-    A_M = 'none'
+    ACTIONS_M = ['left', 'right', 'up', 'down']  # monster's available actions
+    A_M = np.random.choice(ACTIONS_M)
     S_M_next = 0
     R_M_out = 0
     q_target_M = 0
     monster_dead = False
-    record_S_M = []
+    init_place_M = [22, 121, 130]
+
     def __init__(self, S_M, q_table_M, wall_state,WIDE,HEIGHT):
         self.S_M = S_M
         self.q_table_M = q_table_M
         self.wall_state = wall_state
         self.WIDE = WIDE
         self.HEIGHT = HEIGHT
+
 
     def get_env_feedback_M(self,S_M, A,wall_state,WIDE,HEIGHT):  # 怪物可能遇到的情况
         # This is how agent will interact with the environment
