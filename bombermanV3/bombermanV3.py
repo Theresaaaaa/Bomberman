@@ -53,7 +53,7 @@ ACTIONS_B = ['left', 'right', 'up', 'down', 'setBoom']  # bomberman's available 
 EPSILON = 0.9  # greedy police
 ALPHA = 0.1  # learning rate
 GAMMA = 0.9  # discount factor
-MAX_EPISODES = 150  # maximum episodes  基本上就能够跑出来最小四步辽
+MAX_EPISODES = 30  # maximum episodes  基本上就能够跑出来最小四步辽
 FRESH_TIME = 0.3  # fresh time for one move
 #BOOMTIMES = 1  # 炸弹可以爆炸的次数
 BOOM_WAIT = 3
@@ -72,7 +72,7 @@ maze = np.asarray([["X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],
                    ["X", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", "X"],
                    ["X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X", "X"],])  # 迷宫的样子
 index = np.arange(WIDE * HEIGHT).reshape(WIDE, HEIGHT)
-record_S_M = []
+#record_S_M = []
 boom_state = []
 
 print(index)
@@ -98,16 +98,7 @@ for path in (index[maze == path_sign]):
     path_state.append(path)
 print(path_state)  # 所有的通道
 
-start_state_B = np.random.choice(path_state)
-range_place_M = path_state
-range_place_M.remove(start_state_B)
-print(range_place_M)
-init_place_M = []
-for i in range(MONSTER_NUM):
-    random_place = np.random.choice(range_place_M)
-    init_place_M.append(random_place)
-print(start_state_B)
-print(init_place_M)
+
 
 print('--------------stop preproducing----------------------')
 
@@ -164,7 +155,7 @@ def Boom_triger():
 
 
 def get_env_feedback_boom(M_list, S_B, A_B, boom_range):  # B可能遇到的情况
-
+    print(boom_range)
     bomberman_dead = False
     S_B_next = S_B
     for i in range(MONSTER_NUM):
@@ -275,19 +266,12 @@ def get_env_feedback_boom(M_list, S_B, A_B, boom_range):  # B可能遇到的情�
                 M_list[i].R_M = -0.1
 
     if M_list[i].monster_dead and bomberman_dead:
-        M_list[i].R_B = -1
+        R_B = -1
+        print('both dead')
     for i in range(MONSTER_NUM):
         if M_list[i].monster_dead and (not bomberman_dead):
             R_B = 1
-    '''
-    print("get_env_feedback_boom    data")
-    print(S_M_next)
-    print(R_M)
-    print(S_B_next)
     print(R_B)
-    print(monster_dead)
-    print(bomberman_dead)
-    '''
 
 
     return M_list, S_B_next, R_B, bomberman_dead
@@ -412,11 +396,13 @@ def move(M_list, S_B, episode, step_counter, is_terminated, boom_range, is_setBo
             for i in range(MONSTER_NUM):
                 if M_list[i].S_M in boom_range:
                     env_list[M_list[i].S_M // WIDE][M_list[i].S_M % WIDE] = '&'
-                print("monster boomed")
+                    print("monster boomed")
+                break
         else:
             env_list[S_B // WIDE][S_B % WIDE] = '@'
             print("you are eaten!!!!!!")
         interaction_front = env_list
+        print('\n')
         print('\r{}'.format(interaction_front), end='')
         interaction = 'Episode %s: total_steps = %s' % (episode + 1, step_counter)
         print('\r{}'.format(interaction), end='')
@@ -436,45 +422,50 @@ def move(M_list, S_B, episode, step_counter, is_terminated, boom_range, is_setBo
                 env_list[place // WIDE][place % WIDE] = '*'
                 #print("boom! you all survived!")
         interaction = env_list
-        # print('S!!!!')
-        # print(S)
-        os.system("cls")
+        print('\n')
        #print('------------------------------maze looks--------------------------')
         print('\r{}'.format(interaction), end='')
         print('\n')
         time.sleep(FRESH_TIME)
 
-
 def rl():
     # main part of RL loop
+    start_state_B = np.random.choice(path_state)
+    range_place_M = path_state
+    range_place_M.remove(start_state_B)
+    print(range_place_M)
     q_table_M = build_q_table(N_STATES, ACTIONS_M)
     q_table_B = build_q_table(N_STATES, ACTIONS_B)  # action_B里面包括了扔炸弹，算作一个动作并不在choose函数的时候特殊处理，重点要考虑的是一旦扔炸弹之后的问题
     M_list = []  # 怪物object列表
+    #record_S_M = []
     for i in range(MONSTER_NUM):
+        init_place_M = [22, 121, 130]
         M = monster(init_place_M[i], q_table_M, wall_state,WIDE,HEIGHT)
         M_list.append(M)
     for episode in range(MAX_EPISODES):
         step_counter = 1
-        #S_M = init_state_M
+        for i in range(MONSTER_NUM):
+            M_list[i].S_M = init_place_M[i]
         S_B = start_state_B
         is_terminated = False
         is_boom = False
         is_setBoom = False
         boom_range = []
         boom_loading = 0
-
+        boom_move = 0
         bomber_dead = False
-
         move(M_list, S_B, episode, step_counter, is_terminated, boom_range, is_setBoom, is_boom)
         while not is_terminated:
             is_boom = False
-
-
+            for i in range(MONSTER_NUM):
+                print(M_list[i].S_M)
+                print(M_list[i].A_M)
             if step_counter % 2 == 1:
                 for i in range(MONSTER_NUM):
                     M_list[i].A_M = choose_action(init_place_M[i], M_list[i].q_table_M, 'M')  # 获取每一个妖怪的M的动作
                 A_B = choose_action(S_B, q_table_B, 'B')  # 获取B的动作
                 if A_B == 'setBoom':
+                    boom_place = S_B
                     A_B = choose_action(S_B, q_table_M, 'M')
                     is_setBoom = True
                     boom_range = setBoom(S_B)
@@ -492,6 +483,8 @@ def rl():
 
                 if is_setBoom:
                     boom_loading += 1
+                if boom_loading == 1:
+                    boom_move = S_B_next
                 for i in range(MONSTER_NUM):
                     M_list[i].q_predict_M = M_list[i].q_table_M.loc[M_list[i].S_M, M_list[i].A_M]
                 q_predict_B = q_table_B.loc[S_B, A_B]
@@ -506,7 +499,7 @@ def rl():
                             M_list[j].q_target_M = M_list[i].R_M_out  # next state is terminal
                         is_terminated = True  # terminate this episode
                         print("monster_dead")
-                else:
+                if not is_terminated:
                     for i in range(MONSTER_NUM):
                         M_list[i].q_target_M = M_list[i].R_M_out + GAMMA * M_list[i].q_table_M.iloc[M_list[i].S_M_next, :].max()  # next state is not terminal
                     q_target_B = R_B_out + GAMMA * q_table_B.iloc[S_B_next, :].max()  # next state is not terminal
@@ -514,7 +507,16 @@ def rl():
                 for i in range(MONSTER_NUM):
                     M_list[i].q_table_M.loc[M_list[i].S_M, M_list[i].A_M] += ALPHA * (M_list[i].q_target_M - M_list[i].q_predict_M)  # update
                     M_list[i].S_M = M_list[i].S_M_next  # move to next state
-                    M_list[i].record_S_M.append(M_list[i].S_M)
+                    if M_list[i].monster_dead:
+                        q_target_B = 1 + GAMMA * q_table_B.iloc[boom_move, :].max()
+                        q_table_B.loc[S_B, 'setBoom'] += ALPHA * (q_target_B - q_predict_B)
+                        print('setb boom value')
+                        print(ALPHA * (q_target_B - q_predict_B))
+                if bomber_dead:
+                    q_target_B = -1 + GAMMA * q_table_B.iloc[boom_move, :].max()
+                    q_table_B.loc[S_B, 'setBoom'] += ALPHA * (q_target_B - q_predict_B)
+                    print('setb boom value')
+                    print(ALPHA * (q_target_B - q_predict_B))
                 q_table_B.loc[S_B, A_B] += ALPHA * (q_target_B - q_predict_B)  # update
                 S_B = S_B_next  # move to next state
 
@@ -567,9 +569,11 @@ def rl():
 
                 if is_setBoom:
                     boom_loading += 1
+                    '''
                 for i in range(MONSTER_NUM):
                     M_list[i].S_M_next = M_list[i].record_S_M[-1]
                     M_list[i].R_M_out = 0
+                    '''
                 q_predict_B = q_table_B.loc[S_B, A_B]
 
                 if bomber_dead:
@@ -583,12 +587,22 @@ def rl():
                         is_terminated = True  # terminate this episode
                         print("monster_dead")
 
-                else:
+                if not is_terminated:
                     q_target_B = R_B_out + GAMMA * q_table_B.iloc[S_B_next, :].max()  # next state is not terminal
 
                 q_table_B.loc[S_B, A_B] += ALPHA * (q_target_B - q_predict_B)  # update
                 for i in range(MONSTER_NUM):
                     M_list[i].S_M = M_list[i].S_M_next
+                    if M_list[i].monster_dead:
+                        q_target_B = R_B_out + GAMMA * q_table_B.iloc[boom_move, :].max()
+                        q_table_B.loc[S_B, 'setBoom'] += ALPHA * (q_target_B - q_predict_B)
+                        print('setb boom value')
+                        print(ALPHA * (q_target_B - q_predict_B))
+                if bomber_dead:
+                    q_target_B = 1 + GAMMA * q_table_B.iloc[boom_move, :].max()
+                    q_table_B.loc[S_B, 'setBoom'] += ALPHA * (q_target_B - q_predict_B)
+                    print('setb boom value')
+                    print(ALPHA * (q_target_B - q_predict_B))
                 S_B = S_B_next  # move to next state
 
 
@@ -632,7 +646,8 @@ if __name__ == "__main__":
     q_table_B, M_list = rl()
     print('\r\nQ-table_B:\n')
     print(q_table_B)
+    '''
     print('\r\nQ-table_M:\n')
     for i in range(MONSTER_NUM):
-        print(M_list.q_table_M[i])
-
+        print(M_list[i].q_table_M[i])
+'''
